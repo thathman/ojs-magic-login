@@ -6,6 +6,50 @@ Works alongside the standard username/password login; neither flow replaces the 
 
 ---
 
+## Screenshots
+
+**The magic-link button sits below the main login form alongside any other sign-in options (ORCID, Google, etc.)**
+
+![Login page showing the "Email me a sign-in link" button below the password form, alongside ORCID and Google sign-in options](screenshot/01-login-button.png)
+
+---
+
+**Users enter their email on a clean, focused request page**
+
+![Request page with an email field and "Email me a sign-in link" submit button](screenshot/02-request-form.png)
+
+---
+
+**After submitting, a neutral confirmation prevents account enumeration**
+
+![Neutral confirmation: "If that email matches an account, a sign-in link is on its way. Please check your inbox."](screenshot/03-sent-confirmation.png)
+
+---
+
+**The email arrives with a single-use link and a plain-text fallback**
+
+![Email received showing the personalised greeting, one-time link, and expiry notice](screenshot/04-email-received.png)
+
+---
+
+**Clicking the link brings users to a one-click confirm page**
+
+![Confirm sign-in page with a prominent "Sign in now" button and a "Request a new link" fallback](screenshot/05-confirm-page.png)
+
+---
+
+**The email template appears in Settings › Emails and is fully editable**
+
+![OJS Manage Emails screen with "Magic sign-in link" listed and an Edit button](screenshot/06-email-template-list.png)
+
+---
+
+**Journal managers can customise the subject and body without touching code**
+
+![Edit Template screen showing the subject field and rich-text body editor with template variables like {$magicUrl} and {$recipientName}](screenshot/07-email-template-edit.png)
+
+---
+
 ## Features
 
 - One-time email links with configurable expiry (default 15 minutes)
@@ -31,9 +75,11 @@ Works alongside the standard username/password login; neither flow replaces the 
 
 ## Installation
 
-### Via Plugin Gallery
+### ~~Via Plugin Gallery~~
 
-Search for **Passwordless Sign-in (Magic Link)** in **Settings › Website › Plugins › Plugin Gallery** and click Install.
+~~Search for **Passwordless Sign-in (Magic Link)** in **Settings › Website › Plugins › Plugin Gallery** and click Install.~~
+
+*(Pending Plugin Gallery approval — use manual installation for now.)*
 
 ### Manual installation
 
