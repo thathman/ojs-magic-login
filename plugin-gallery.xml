@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin category="generic" product="magicLogin">
+	<name locale="en">Passwordless Sign-in (Magic Link)</name>
+	<homepage>https://github.com/thathman/ojs-magic-login</homepage>
+	<summary locale="en">Let users sign in with a one-time email link — no password required.</summary>
+	<description locale="en"><![CDATA[
+		<p>Adds passwordless sign-in to OJS using one-time email links, alongside the standard username/password flow. Users enter their email, receive a secure link, and sign in with one click.</p>
+		<p>Features include per-IP rate limiting, a selector/verifier token scheme (only a SHA-256 hash is stored), single-use tokens, CSRF protection, and full email template customisation from Settings › Emails.</p>
+	]]></description>
+	<maintainer>
+		<name>Hendrix Nwaokolo</name>
+		<institution>Airix Media</institution>
+		<email>hello@airixmedia.com</email>
+	</maintainer>
+	<release date="2026-06-02" version="1.0.0.0" md5="PENDING">
+		<package>https://github.com/thathman/ojs-magic-login/releases/download/v1.0.0/magicLogin.tar.gz</package>
+		<compatibility application="ojs2">
+			<version>3.5.0.3</version>
+		</compatibility>
+		<description>Initial public release. One-time email link sign-in with rate limiting, CSRF protection, and email template support.</description>
+	</release>
+</plugin>

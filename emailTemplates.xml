@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE emails SYSTEM "../../../lib/pkp/dtd/emailTemplates.dtd">
+<!--
+  plugins/generic/magicLogin/emailTemplates.xml
+  Default email template for the magic link sign-in feature.
+  Subject and body are locale keys resolved from locale/en/locale.po.
+-->
+<emails>
+	<email
+		key="MAGIC_LOGIN_LINK"
+		name="plugins.generic.magicLogin.mailable.link.name"
+		subject="plugins.generic.magicLogin.mailable.link.subject"
+		body="plugins.generic.magicLogin.mailable.link.body"
+		description="plugins.generic.magicLogin.mailable.link.description"
+	/>
+</emails>

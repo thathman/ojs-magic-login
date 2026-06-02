@@ -1,0 +1,398 @@
+/*
+ * magicLogin — standalone styles for the plugin's own request/confirm pages.
+ * Used on journals that do NOT override these templates via their theme.
+ * All rules are scoped under .magic-login-page so they cannot bleed into
+ * the host journal's layout.
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;1,6..72,400;1,6..72,500&family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+/* ── Design tokens (scoped — no conflict with host journal) ── */
+.magic-login-page {
+  --ml-paper:       oklch(0.985 0.006 85);
+  --ml-paper-2:     oklch(0.955 0.010 85);
+  --ml-ink:         oklch(0.18  0.018 240);
+  --ml-ink-2:       oklch(0.32  0.020 240);
+  --ml-ink-3:       oklch(0.50  0.014 240);
+  --ml-rule:        oklch(0.86  0.012 80);
+  --ml-teal:        oklch(0.50  0.090 200);
+  --ml-teal-deep:   oklch(0.40  0.085 202);
+  --ml-teal-dark:   oklch(0.28  0.058 205);
+  --ml-teal-soft:   oklch(0.95  0.030 200);
+  --ml-gold:        oklch(0.78  0.13  85);
+  --ml-ok:          oklch(0.62  0.13  150);
+  --ml-err:         oklch(0.55  0.18  25);
+  --ml-serif: "Newsreader", Georgia, "Times New Roman", serif;
+  --ml-sans:  "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --ml-mono:  "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(400px, 1fr);
+  min-height: 100vh;
+  background: var(--ml-paper);
+  color: var(--ml-ink);
+  font-family: var(--ml-sans);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.magic-login-page *, .magic-login-page *::before, .magic-login-page *::after {
+  box-sizing: inherit;
+}
+
+/* ── Left panel ───────────────────────────────────────────── */
+.magic-login-side {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 32px;
+  overflow: hidden;
+  padding: 52px 56px;
+  background: var(--ml-teal-dark);
+  color: var(--ml-paper);
+}
+
+.magic-login-side::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 86% 8%,  oklch(0.78 0.13 85 / 0.28), transparent 46%),
+    radial-gradient(circle at 8%  92%, oklch(0.50 0.09 200 / 0.48), transparent 52%);
+  pointer-events: none;
+}
+
+.magic-login-side > * { position: relative; }
+
+/* Status badge */
+.magic-login-status {
+  position: absolute;
+  top: 18px; right: 18px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--ml-mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: oklch(0.92 0.01 80 / 0.65);
+}
+
+.magic-login-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--ml-teal);
+  box-shadow: 0 0 0 2px oklch(0.56 0.09 200 / 0.45);
+  animation: ml-pulse 2.4s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+.magic-login-dot-ok { background: var(--ml-ok); box-shadow: 0 0 0 2px oklch(0.62 0.13 150 / 0.4); }
+.magic-login-dot-err { background: var(--ml-err); box-shadow: 0 0 0 2px oklch(0.55 0.18 25 / 0.4); animation: none; }
+
+@keyframes ml-pulse {
+  0%, 100% { box-shadow: 0 0 0 2px oklch(0.56 0.09 200 / 0.45); }
+  50%       { box-shadow: 0 0 0 6px oklch(0.56 0.09 200 / 0); }
+}
+
+/* Logo */
+.magic-login-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--ml-paper);
+  text-decoration: none;
+}
+
+.magic-login-mark {
+  display: grid;
+  place-items: center;
+  width: 40px; height: 40px;
+  flex: 0 0 40px;
+  background: var(--ml-gold);
+  color: var(--ml-ink);
+  font-family: var(--ml-mono);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  border-radius: 2px;
+}
+
+.magic-login-logo-title {
+  font-family: var(--ml-serif);
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.1;
+}
+
+.magic-login-logo-subtitle {
+  margin-top: 3px;
+  font-family: var(--ml-mono);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: oklch(0.88 0.01 80 / 0.58);
+}
+
+/* Visual cover panel */
+.magic-login-cover {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid oklch(1 0 0 / 0.10);
+  border-radius: 2px;
+  background:
+    radial-gradient(circle at 22% 72%, oklch(0.78 0.13 85 / 0.38), transparent 44%),
+    linear-gradient(140deg, var(--ml-teal-deep) 0%, oklch(0.18 0.018 240) 80%);
+  padding: 22px 22px 68px;
+}
+
+.magic-login-cover::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(90deg, transparent 0 calc(100% - 1px), oklch(1 0 0 / 0.055) 0),
+    linear-gradient(0deg,  transparent 0 calc(100% - 1px), oklch(1 0 0 / 0.055) 0);
+  background-size: 26px 26px;
+  pointer-events: none;
+}
+
+.magic-login-cover-title {
+  position: relative;
+  z-index: 1;
+  max-width: 16ch;
+  color: var(--ml-paper);
+  font-family: var(--ml-serif);
+  font-size: 28px;
+  font-style: italic;
+  line-height: 1.1;
+  font-weight: 400;
+}
+
+.magic-login-cover-caption {
+  position: absolute;
+  bottom: 18px; left: 22px; right: 22px;
+  z-index: 1;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: oklch(0.88 0.01 80 / 0.7);
+  font-family: var(--ml-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+/* Journal description */
+.magic-login-desc {
+  font-family: var(--ml-serif);
+  font-style: italic;
+  font-size: 15px;
+  line-height: 1.6;
+  color: oklch(0.88 0.01 80 / 0.78);
+  margin: 0;
+  padding-left: 14px;
+  border-left: 2px solid oklch(1 0 0 / 0.18);
+}
+
+/* Meta footer */
+.magic-login-meta {
+  display: grid;
+  gap: 6px;
+  color: oklch(0.88 0.01 80 / 0.55);
+  font-family: var(--ml-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  line-height: 1.7;
+  text-transform: uppercase;
+}
+
+/* ── Right panel ──────────────────────────────────────────── */
+.magic-login-main {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 56px;
+  background: var(--ml-paper);
+}
+
+.magic-login-card {
+  width: 100%;
+  max-width: 420px;
+}
+
+/* Eyebrow */
+.magic-login-eyebrow {
+  margin-bottom: 10px;
+  color: var(--ml-ink-3);
+  font-family: var(--ml-mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.magic-login-eyebrow-ok  { color: var(--ml-ok); }
+.magic-login-eyebrow-err { color: var(--ml-err); }
+
+/* Heading */
+.magic-login-title {
+  margin: 0 0 12px;
+  color: var(--ml-ink);
+  font-family: var(--ml-serif);
+  font-size: 40px;
+  font-weight: 400;
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+}
+
+.magic-login-title em {
+  font-style: italic;
+  color: var(--ml-teal-deep);
+}
+
+/* Sub-heading copy */
+.magic-login-sub {
+  margin: 0 0 24px;
+  color: var(--ml-ink-2);
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+/* Alerts */
+.magic-login-alert {
+  margin: 0 0 20px;
+  padding: 13px 16px;
+  border: 1px solid var(--ml-rule);
+  border-left-width: 3px;
+  background: var(--ml-paper-2);
+  color: var(--ml-ink);
+  font-size: 14px;
+  line-height: 1.5;
+  border-radius: 2px;
+}
+
+.magic-login-alert-ok {
+  border-color: oklch(0.78 0.07 160);
+  border-left-color: var(--ml-ok);
+  background: oklch(0.97 0.018 160);
+}
+
+.magic-login-alert-err {
+  border-color: oklch(0.80 0.06 25);
+  border-left-color: var(--ml-err);
+  background: oklch(0.97 0.018 25);
+}
+
+/* Form */
+.magic-login-form {
+  display: grid;
+  gap: 20px;
+  margin-top: 8px;
+}
+
+.magic-login-field {
+  display: grid;
+  gap: 7px;
+}
+
+.magic-login-label {
+  color: var(--ml-ink-3);
+  font-family: var(--ml-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.magic-login-input {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1px solid var(--ml-rule);
+  border-radius: 2px;
+  background: var(--ml-paper);
+  color: var(--ml-ink);
+  font-family: var(--ml-sans);
+  font-size: 15px;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  appearance: none;
+}
+
+.magic-login-input::placeholder { color: var(--ml-ink-3); opacity: 0.7; }
+
+.magic-login-input:focus {
+  border-color: var(--ml-teal-deep);
+  box-shadow: 0 0 0 3px var(--ml-teal-soft);
+}
+
+/* Button */
+.magic-login-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  padding: 13px 18px;
+  border: 1px solid var(--ml-ink);
+  border-radius: 2px;
+  background: var(--ml-ink);
+  color: var(--ml-paper);
+  font-family: var(--ml-sans);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: background 0.16s, border-color 0.16s, box-shadow 0.16s;
+}
+
+.magic-login-button:hover,
+.magic-login-button:focus-visible {
+  background: var(--ml-teal-deep);
+  border-color: var(--ml-teal-deep);
+  box-shadow: 0 2px 12px oklch(0.40 0.085 202 / 0.35);
+  outline: none;
+}
+
+.magic-login-button:active {
+  background: var(--ml-teal-dark);
+  border-color: var(--ml-teal-dark);
+}
+
+/* Footer switch */
+.magic-login-switch {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--ml-rule);
+  color: var(--ml-ink-3);
+  font-size: 13px;
+  text-align: center;
+}
+
+.magic-login-switch a {
+  color: var(--ml-teal-deep);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: oklch(0.40 0.085 202 / 0.4);
+}
+
+.magic-login-switch a:hover { text-decoration-color: var(--ml-teal-deep); }
+
+/* ── Responsive ───────────────────────────────────────────── */
+@media (max-width: 960px) {
+  .magic-login-page {
+    grid-template-columns: 1fr;
+    min-height: auto;
+  }
+  .magic-login-side  { padding: 40px 28px; }
+  .magic-login-main  { padding: 48px 28px; }
+  .magic-login-card  { max-width: 560px; }
+  .magic-login-title { font-size: 34px; }
+}
+
+@media (max-width: 560px) {
+  .magic-login-side  { padding: 32px 20px; }
+  .magic-login-main  { padding: 40px 20px; }
+  .magic-login-title { font-size: 30px; }
+  .magic-login-cover-caption { flex-direction: column; gap: 4px; }
+}
