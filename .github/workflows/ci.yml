@@ -95,24 +95,8 @@ jobs:
           coverage: none
           tools: none
 
-      - name: All template keys present in locale/en/locale.po
+      - name: All template keys present and no empty translations
         run: php tests/locale-check.php
-
-      - name: No empty msgstr values for plugin keys
-        run: |
-          php -r "
-            \$po = file_get_contents('locale/en/locale.po');
-            preg_match_all('/msgid \"(plugins\.generic\.magicLogin\.[^\"]+)\"\s+msgstr \"([^\"]*)\"/s', \$po, \$m, PREG_SET_ORDER);
-            \$empty = [];
-            foreach (\$m as \$match) {
-              if (trim(\$match[2]) === '') \$empty[] = \$match[1];
-            }
-            if (!empty(\$empty)) {
-              foreach (\$empty as \$key) echo '::error::Empty msgstr for: ' . \$key . PHP_EOL;
-              exit(1);
-            }
-            echo 'All ' . count(\$m) . ' plugin locale keys have non-empty translations' . PHP_EOL;
-          "
 
   # ── 3. Token security tests ────────────────────────────────────────────────
   token:

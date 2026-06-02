@@ -3,38 +3,113 @@
 /**
  * @file tests/locale-check.php
  *
- * Verifies that every {translate key="plugins.generic.magicLogin.*"} reference
- * used in the plugin's own Smarty templates has a corresponding msgid entry in
- * locale/en/locale.po.
+ * Two checks in one pass:
+ *   1. Every {translate key="plugins.generic.magicLogin.*"} in .tpl files
+ *      and __('plugins.generic.magicLogin.*') in .php files has a msgid
+ *      in locale/en/locale.po.
+ *   2. No plugin key has an empty resolved msgstr (handles multi-line .po
+ *      continuation strings correctly).
  *
- * Also checks keys referenced in PHP __() calls within the plugin's classes.
- *
- * Exit code 0 = all keys present.
- * Exit code 1 = one or more keys missing.
+ * Exit 0 = all clear. Exit 1 = failures found.
  */
 
 declare(strict_types=1);
 
-$root = dirname(__DIR__);
+$root   = dirname(__DIR__);
+$errors = 0;
 
-// ── Collect keys from .tpl files ──────────────────────────────────────────────
+// ── Parse locale/en/locale.po into key => value map ──────────────────────────
+
+$poFile = $root . '/locale/en/locale.po';
+if (!file_exists($poFile)) {
+    echo "::error::locale/en/locale.po not found\n";
+    exit(1);
+}
+
+/**
+ * Minimal .po parser.
+ * Handles both single-line  msgstr "value"
+ * and multi-line            msgstr ""\n"line1"\n"line2"
+ * Returns ['msgid' => 'resolved msgstr', ...]
+ */
+function parsePo(string $content): array
+{
+    $map     = [];
+    $lines   = explode("\n", $content);
+    $msgid   = null;
+    $msgstr  = null;
+    $inStr   = null; // 'id' | 'str'
+
+    $unescape = fn(string $s): string =>
+        str_replace(['\\n', '\\"', '\\\\'], ["\n", '"', '\\'], $s);
+
+    foreach ($lines as $raw) {
+        $line = rtrim($raw);
+
+        if (str_starts_with($line, 'msgid ')) {
+            // Save previous pair
+            if ($msgid !== null && $msgid !== '') {
+                $map[$msgid] = $msgstr ?? '';
+            }
+            $msgid  = $unescape(trim(substr($line, 6), '"'));
+            $msgstr = null;
+            $inStr  = 'id';
+            continue;
+        }
+
+        if (str_starts_with($line, 'msgstr ')) {
+            $msgstr = $unescape(trim(substr($line, 7), '"'));
+            $inStr  = 'str';
+            continue;
+        }
+
+        // Continuation line: "more text"
+        if ($inStr && preg_match('/^"(.*)"$/', $line, $m)) {
+            $chunk = $unescape($m[1]);
+            if ($inStr === 'id') {
+                $msgid .= $chunk;
+            } else {
+                $msgstr .= $chunk;
+            }
+            continue;
+        }
+
+        // Blank line or comment — flush
+        if (trim($line) === '' || str_starts_with($line, '#')) {
+            $inStr = null;
+        }
+    }
+    // Last pair
+    if ($msgid !== null && $msgid !== '') {
+        $map[$msgid] = $msgstr ?? '';
+    }
+
+    return $map;
+}
+
+$locale = parsePo(file_get_contents($poFile));
+$pluginDefined = array_filter(
+    $locale,
+    fn($k) => str_starts_with($k, 'plugins.generic.magicLogin.'),
+    ARRAY_FILTER_USE_KEY
+);
+
+// ── Collect keys from template files ─────────────────────────────────────────
 
 $tplKeys = [];
-$tplFiles = new RecursiveIteratorIterator(
+$iter    = new RecursiveIteratorIterator(
     new RecursiveDirectoryIterator($root . '/templates', FilesystemIterator::SKIP_DOTS)
 );
-foreach ($tplFiles as $file) {
+foreach ($iter as $file) {
     if ($file->getExtension() !== 'tpl') {
         continue;
     }
-    $content = file_get_contents($file->getPathname());
-    // {translate key="plugins.generic.magicLogin.foo.bar"}
     preg_match_all(
         '/\{translate\s+key=["\']([^"\']+)["\']/i',
-        $content,
-        $matches
+        file_get_contents($file->getPathname()),
+        $m
     );
-    foreach ($matches[1] as $key) {
+    foreach ($m[1] as $key) {
         if (str_starts_with($key, 'plugins.generic.magicLogin.')) {
             $tplKeys[$key] = $file->getFilename();
         }
@@ -44,9 +119,8 @@ foreach ($tplFiles as $file) {
 // ── Collect keys from PHP files ───────────────────────────────────────────────
 
 $phpKeys = [];
-$phpDirs = ['classes', 'pages', 'mailables', ''];   // '' = plugin root
-foreach ($phpDirs as $subdir) {
-    $dir = $subdir ? $root . '/' . $subdir : $root;
+foreach (['classes', 'pages', 'mailables', ''] as $sub) {
+    $dir = $sub ? "$root/$sub" : $root;
     if (!is_dir($dir)) {
         continue;
     }
@@ -54,14 +128,12 @@ foreach ($phpDirs as $subdir) {
         if ($file->getExtension() !== 'php') {
             continue;
         }
-        $content = file_get_contents($file->getPathname());
-        // __('plugins.generic.magicLogin.foo') or __("plugins.generic.magicLogin.foo")
         preg_match_all(
             '/__\s*\(\s*["\']([^"\']+)["\']/i',
-            $content,
-            $matches
+            file_get_contents($file->getPathname()),
+            $m
         );
-        foreach ($matches[1] as $key) {
+        foreach ($m[1] as $key) {
             if (str_starts_with($key, 'plugins.generic.magicLogin.')) {
                 $phpKeys[$key] = $file->getFilename();
             }
@@ -69,46 +141,44 @@ foreach ($phpDirs as $subdir) {
     }
 }
 
-$allKeys = array_unique(array_merge(array_keys($tplKeys), array_keys($phpKeys)));
-sort($allKeys);
+$allUsed = array_unique(array_merge(array_keys($tplKeys), array_keys($phpKeys)));
+sort($allUsed);
 
-// ── Load locale/en/locale.po ──────────────────────────────────────────────────
+// ── Check 1: every used key is defined ───────────────────────────────────────
 
-$poFile = $root . '/locale/en/locale.po';
-if (!file_exists($poFile)) {
-    echo "::error::locale/en/locale.po not found\n";
-    exit(1);
-}
-$po = file_get_contents($poFile);
-
-// Build set of defined msgids
-preg_match_all('/^msgid\s+"([^"]+)"/m', $po, $m);
-$defined = array_flip($m[1]);
-
-// ── Compare ───────────────────────────────────────────────────────────────────
+echo sprintf(
+    "Checking %d used key(s) against %d defined in locale/en/locale.po\n",
+    count($allUsed),
+    count($pluginDefined)
+);
 
 $missing = [];
-foreach ($allKeys as $key) {
-    if (!isset($defined[$key])) {
-        $source = $tplKeys[$key] ?? ($phpKeys[$key] ?? '?');
-        $missing[] = ['key' => $key, 'source' => $source];
+foreach ($allUsed as $key) {
+    if (!array_key_exists($key, $locale)) {
+        $src      = $tplKeys[$key] ?? ($phpKeys[$key] ?? '?');
+        $missing[] = "$key  (from $src)";
+        echo "::error::Missing locale key: $key (used in $src)\n";
+        $errors++;
     }
 }
 
-// Report
-echo sprintf(
-    "Checked %d plugin locale key(s) against locale/en/locale.po (%d defined)\n",
-    count($allKeys),
-    count(array_filter(array_keys($defined), fn($k) => str_starts_with($k, 'plugins.generic.magicLogin.')))
-);
+// ── Check 2: no plugin key has an empty translation ───────────────────────────
 
-if (empty($missing)) {
-    echo "\033[32mAll keys present.\033[0m\n";
+$empty = [];
+foreach ($pluginDefined as $key => $value) {
+    if (trim($value) === '') {
+        $empty[] = $key;
+        echo "::error::Empty msgstr for key: $key\n";
+        $errors++;
+    }
+}
+
+// ── Summary ───────────────────────────────────────────────────────────────────
+
+if ($errors === 0) {
+    echo "\033[32mAll " . count($allUsed) . " used keys present and " . count($pluginDefined) . " defined keys non-empty.\033[0m\n";
     exit(0);
 }
 
-echo "\033[31m" . count($missing) . " missing key(s):\033[0m\n";
-foreach ($missing as $item) {
-    echo "  ::error::Missing locale key '{$item['key']}' (used in {$item['source']})\n";
-}
+echo "\033[31m$errors error(s) found.\033[0m\n";
 exit(1);

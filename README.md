@@ -1,75 +1,87 @@
 # OJS Magic Login
 
-Passwordless sign-in for Open Journal Systems 3.5 — users receive a one-time link by email and sign in with one click, no password required.
+<table>
+<tr>
+<td><strong>Version</strong></td><td>1.0.0</td>
+<td><strong>OJS</strong></td><td>3.5.0+</td>
+<td><strong>PHP</strong></td><td>8.1+</td>
+<td><strong>License</strong></td><td>GPL-3.0-or-later</td>
+</tr>
+</table>
 
-Works alongside the standard username/password login; neither flow replaces the other.
+[![CI](https://github.com/thathman/ojs-magic-login/actions/workflows/ci.yml/badge.svg)](https://github.com/thathman/ojs-magic-login/actions/workflows/ci.yml)
+
+Passwordless sign-in for Open Journal Systems 3.5. Users receive a one-time link by email and sign in with a single click — no password required. Works alongside the standard login; neither flow replaces the other.
 
 ---
 
 ## Screenshots
 
-**The magic-link button sits below the main login form alongside any other sign-in options (ORCID, Google, etc.)**
+<br>
 
-![Login page showing the "Email me a sign-in link" button below the password form, alongside ORCID and Google sign-in options](screenshot/01-login-button.png)
+**The "Email me a sign-in link" button is injected below the password form, alongside any other sign-in options already active on the journal.**
 
----
+![Login page — magic-link button below password form, alongside ORCID and Google](screenshot/01-login-button.png)
 
-**Users enter their email on a clean, focused request page**
+<br>
 
-![Request page with an email field and "Email me a sign-in link" submit button](screenshot/02-request-form.png)
+**Clicking the button opens a focused request page where the user enters their account email.**
 
----
+![Request page — email field and submit button](screenshot/02-request-form.png)
 
-**After submitting, a neutral confirmation prevents account enumeration**
+<br>
 
-![Neutral confirmation: "If that email matches an account, a sign-in link is on its way. Please check your inbox."](screenshot/03-sent-confirmation.png)
+**The response is always identical regardless of whether the email matched an account, preventing user enumeration.**
 
----
+![Sent confirmation — neutral "check your inbox" message](screenshot/03-sent-confirmation.png)
 
-**The email arrives with a single-use link and a plain-text fallback**
+<br>
 
-![Email received showing the personalised greeting, one-time link, and expiry notice](screenshot/04-email-received.png)
+**The email is delivered immediately with a personalised greeting, the one-time link, and an expiry notice.**
 
----
+![Email received — personalised body with the magic link and 15-minute expiry](screenshot/04-email-received.png)
 
-**Clicking the link brings users to a one-click confirm page**
+<br>
 
-![Confirm sign-in page with a prominent "Sign in now" button and a "Request a new link" fallback](screenshot/05-confirm-page.png)
+**Clicking the link in the email brings the user to a one-click confirm page. The token is verified read-only on GET; it is consumed only when the user clicks Sign in now.**
 
----
+![Confirm page — "Sign in now" button with "Request a new link" fallback](screenshot/05-confirm-page.png)
 
-**The email template appears in Settings › Emails and is fully editable**
+<br>
 
-![OJS Manage Emails screen with "Magic sign-in link" listed and an Edit button](screenshot/06-email-template-list.png)
+**The email template appears in Settings › Emails and is fully editable by journal managers — no code changes required.**
 
----
+![Manage Emails — "Magic sign-in link" listed with an Edit button](screenshot/06-email-template-list.png)
 
-**Journal managers can customise the subject and body without touching code**
+<br>
 
-![Edit Template screen showing the subject field and rich-text body editor with template variables like {$magicUrl} and {$recipientName}](screenshot/07-email-template-edit.png)
+**Managers can customise the subject and body. Template variables are inserted via the Insert Content picker.**
+
+![Edit Template — subject field, rich-text body editor, and template variable placeholders](screenshot/07-email-template-edit.png)
 
 ---
 
 ## Features
 
 - One-time email links with configurable expiry (default 15 minutes)
-- Per-account rate limiting (configurable minimum interval between requests)
+- Per-account minimum interval between requests (default 60 seconds)
 - Per-IP sliding-window rate limiting on both the send and verify endpoints
-- Selector/verifier token scheme — only a SHA-256 hash is stored in the database, never the raw secret
-- Single-use tokens consumed atomically before session creation
-- Neutral send response prevents account enumeration
-- Configurable from **Settings › Website › Plugins** — no code changes needed
-- Email template editable from **Settings › Emails** (key: `MAGIC_LOGIN_LINK`)
-- Theme-override support: themes can supply their own `request.tpl` / `confirm.tpl` under `templates/plugins/generic/magicLogin/templates/`
+- Selector / verifier token scheme — only `sha256(verifier)` is stored; the database never holds a usable secret
+- Token consumed atomically before session creation (single-use guarantee)
+- Neutral send response — identical whether the email matched an account or not
+- Email template editable from **Settings › Emails** (key `MAGIC_LOGIN_LINK`)
+- Settings panel in **Settings › Website › Plugins** — enable/disable per journal, configure TTL and throttle
+- Theme-override support — supply `request.tpl` / `confirm.tpl` inside your theme to apply a custom design
+- Zero modifications to OJS core files — hooks only
 
 ---
 
 ## Requirements
 
-| Requirement | Version |
-|-------------|---------|
-| OJS | 3.5.0 or later |
-| PHP | 8.1 or later |
+| | Minimum version |
+|---|---|
+| OJS | 3.5.0 |
+| PHP | 8.1 |
 
 ---
 
@@ -79,82 +91,88 @@ Works alongside the standard username/password login; neither flow replaces the 
 
 ~~Search for **Passwordless Sign-in (Magic Link)** in **Settings › Website › Plugins › Plugin Gallery** and click Install.~~
 
-*(Pending Plugin Gallery approval — use manual installation for now.)*
+*Pending Plugin Gallery approval — use manual installation for now.*
 
-### Manual installation
+### Manual
 
-1. Download the latest `.tar.gz` from the [Releases](../../releases) page.
-2. Unpack into `plugins/generic/` so the path is `plugins/generic/magicLogin/`.
-3. Log in to OJS, go to **Settings › Website › Plugins › Generic Plugins**, find **Passwordless Sign-in (Magic Link)** and click **Enable**.
-4. Click the plugin's **Settings** link and tick **Enable magic-link sign-in for this journal**.
+1. Download `magicLogin.tar.gz` from the [Releases](../../releases) page.
+2. Unpack into `plugins/generic/` so the result is `plugins/generic/magicLogin/`.
+3. In OJS go to **Settings › Website › Plugins › Generic Plugins**, find **Passwordless Sign-in (Magic Link)** and click **Enable**.
+4. Click **Settings** and tick **Enable magic-link sign-in for this journal**.
 
-> **Note — versions table:** If you install manually by dropping the files in without using the OJS plugin installer, the plugin will not appear as enabled until a row exists in the `versions` table. Run once:
+> **Note — versions table**
+>
+> If you drop the files in manually without using the OJS plugin installer, OJS will not detect the plugin until a row exists in the `versions` table. Run this once after copying the files:
+>
 > ```sql
 > INSERT INTO versions
 >   (major, minor, revision, build, date_installed, current,
 >    product_type, product, product_class_name, lazy_load, sitewide)
-> VALUES (1,0,0,0,NOW(),1,'plugins.generic','magicLogin','MagicLoginPlugin',1,0);
+> VALUES (1,0,0,0,NOW(),1,
+>   'plugins.generic','magicLogin','MagicLoginPlugin',1,0);
 > ```
+>
 > The Plugin Gallery installer handles this automatically.
 
 ---
 
 ## Configuration
 
-| Setting | Description | Default |
-|---------|-------------|---------|
-| Enable magic-link sign-in | Activates the feature for this journal | Off |
-| Link validity (minutes) | How long an emailed link stays usable (1–120) | 15 |
-| Minimum seconds between requests | Per-account throttle (30–3600) | 60 |
+| Setting | Range | Default | Description |
+|---------|-------|---------|-------------|
+| Enable magic-link sign-in | on / off | off | Activates the feature for this journal |
+| Link validity | 1 – 120 min | 15 min | How long an emailed link remains usable |
+| Minimum seconds between requests | 30 – 3600 s | 60 s | Per-account throttle |
 
 ---
 
 ## How it works
 
 ```
-User enters email          →  POST /magicLogin/send
-                               ├─ IP rate-limit check
-                               ├─ look up account (no response difference if not found)
-                               ├─ issue selector + verifier; store selector + sha256(verifier)
-                               ├─ email link:  /magicLogin/confirm?token=<selector>.<verifier>
-                               └─ always show neutral "check your inbox" message
+User enters email        POST /magicLogin/send
+                           IP rate-limit check
+                           look up account  (response is identical either way)
+                           issue selector + verifier
+                           store selector and sha256(verifier)
+                           email  /magicLogin/confirm?token=<selector>.<verifier>
+                           show neutral "check your inbox" page
 
-User clicks email link     →  GET /magicLogin/confirm?token=…
-                               ├─ validate token format
-                               ├─ verify selector in DB, check hash + expiry (read-only)
-                               └─ show "Sign in now" button
+User clicks email link   GET /magicLogin/confirm?token=...
+                           validate token format (regex)
+                           look up selector in DB, check hash + expiry  (read-only)
+                           show "Sign in now" button
 
-User clicks Sign in        →  POST /magicLogin/login
-                               ├─ IP rate-limit check
-                               ├─ re-verify token (expiry, hash)
-                               ├─ consume token (delete from DB — single-use)
-                               ├─ establish OJS session
-                               └─ redirect to dashboard
+User clicks Sign in      POST /magicLogin/login
+                           IP rate-limit check
+                           re-verify token
+                           consume token  (delete from DB before session creation)
+                           establish OJS session
+                           redirect to dashboard
 ```
 
 ---
 
-## Security model
+## Security
 
-- **Selector/verifier scheme**: the URL carries a random 128-bit selector (lookup key) and a random 256-bit verifier (secret). Only `sha256(verifier)` is stored. A database read cannot reconstruct a usable token.
-- **Constant-time comparison**: `hash_equals()` prevents timing-based verifier enumeration.
-- **Single-use**: the token is deleted before the session is created. If session setup fails, the token is already gone.
-- **Short expiry**: 15 minutes by default, administrator-configurable.
-- **Rate limiting**: per-IP sliding window on both `/send` (5 requests / 10 min) and `/login` (10 attempts / 5 min).
-- **Neutral responses**: `/send` always returns the same page regardless of whether the email matched an account.
-- **CSRF**: every mutating endpoint enforces OJS's built-in CSRF token.
-- **No core changes**: zero modifications to OJS core files. Hooks only.
+| Property | Implementation |
+|----------|----------------|
+| Secret storage | Only `sha256(verifier)` stored; raw verifier never touches the database |
+| Timing attack prevention | `hash_equals()` for constant-time comparison |
+| Single-use | Token deleted before session creation; replay is impossible |
+| Short expiry | 15 minutes by default; administrator-configurable |
+| Rate limiting | Per-IP sliding window: 5 sends / 10 min, 10 verify attempts / 5 min |
+| Account enumeration | Send endpoint returns identical response for matched and unmatched emails |
+| CSRF | OJS built-in CSRF token enforced on every mutating endpoint |
+| Core changes | None — the plugin is entirely hook-based |
 
 ---
 
 ## Email template
 
-The email sent to users is customisable under **Settings › Emails › Magic sign-in link** (`MAGIC_LOGIN_LINK`).
+Editable under **Settings › Emails › Magic sign-in link** (key `MAGIC_LOGIN_LINK`).
 
-Available template variables:
-
-| Variable | Description |
-|----------|-------------|
+| Variable | Value |
+|----------|-------|
 | `{$recipientName}` | User's full name |
 | `{$contextName}` | Journal name |
 | `{$magicUrl}` | The one-time sign-in URL |
@@ -164,25 +182,31 @@ Available template variables:
 
 ## Theming
 
-The plugin ships generic templates (`templates/request.tpl`, `templates/confirm.tpl`) that work with any OJS theme. To apply your own design, create overrides inside your theme:
+The plugin ships generic templates that work with any OJS theme. To apply your own design, place overrides in your theme directory:
 
 ```
-plugins/themes/<yourtheme>/templates/plugins/generic/magicLogin/templates/request.tpl
-plugins/themes/<yourtheme>/templates/plugins/generic/magicLogin/templates/confirm.tpl
+plugins/themes/<yourtheme>/
+  templates/
+    plugins/
+      generic/
+        magicLogin/
+          templates/
+            request.tpl   # email entry form
+            confirm.tpl   # one-click sign-in confirmation
 ```
 
-These receive the same Smarty variables (`$sendUrl`, `$loginUrl`, `$token`, `$neutralMessage`, `$error`) as the built-in templates.
+Available Smarty variables: `$sendUrl`, `$loginUrl`, `$token`, `$neutralMessage`, `$error`.
 
 ---
 
 ## Roadmap
 
-| Milestone | Status |
-|-----------|--------|
-| One-time email links (magic links) | ✅ Released — v1.0.0 |
-| Passkey / WebAuthn sign-in | 🔜 Planned — v2.0.0 |
+| Version | Status | Description |
+|---------|--------|-------------|
+| 1.0.0 | Released | One-time email links with rate limiting and CSRF protection |
+| 2.0.0 | Planned | Passkey / WebAuthn sign-in as a second passwordless method |
 
-The passkey milestone will add `PublicKeyCredential`-based authentication as a second passwordless method. The session-establishment core (`classes/SessionService.php`) is already structured to accept a second caller alongside magic links.
+The session-establishment layer (`classes/SessionService.php`) is already factored to accept a second caller so the passkey implementation does not require structural changes to this release.
 
 ---
 
@@ -194,4 +218,4 @@ Pull requests are welcome. Please open an issue first for anything beyond a smal
 
 ## License
 
-Distributed under the **GNU General Public License v3.0 or later**. See `LICENSE` for the full text.
+GNU General Public License v3.0 or later. See [`LICENSE`](LICENSE) for the full text.
