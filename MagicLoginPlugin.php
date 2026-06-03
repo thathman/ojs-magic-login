@@ -15,6 +15,7 @@ use APP\core\Application;
 use APP\facades\Repo;
 use APP\plugins\generic\magicLogin\mailables\MagicLoginLink;
 use APP\plugins\generic\magicLogin\pages\MagicLoginHandler;
+use Illuminate\Support\Facades\DB;
 use PKP\core\JSONMessage;
 use PKP\core\Registry;
 use PKP\linkAction\LinkAction;
@@ -30,6 +31,12 @@ class MagicLoginPlugin extends GenericPlugin
         if (!$success) {
             return false;
         }
+
+        // Rename any legacy versions row recorded under the wrong product key
+        // ('ojs2') so that OJS version-tracking stays consistent after the
+        // 1.0.0 → 1.1.0 fix.  Idempotent: no-op once the row is correct.
+        $this->migrateVersionRecord();
+
         if (!$this->getEnabled($mainContextId)) {
             return true;
         }
@@ -90,7 +97,6 @@ class MagicLoginPlugin extends GenericPlugin
             if (!$context) {
                 return;
             }
-            // Check if the template is already installed to avoid redundant work.
             $existing = Repo::emailTemplate()->getByKey($context->getId(), MagicLoginLink::EMAIL_KEY);
             if ($existing) {
                 return;
@@ -98,12 +104,39 @@ class MagicLoginPlugin extends GenericPlugin
             $this->addLocaleData();
             Repo::emailTemplate()->dao->installEmailTemplates(
                 $this->getInstallEmailTemplatesFile(),
-                [],   // all installed locales
-                null, // all keys in the file
-                true  // skipExisting = idempotent
+                [],
+                null,
+                true
             );
         } catch (\Throwable $e) {
             error_log('[magicLogin] email template install failed: ' . $e->getMessage());
+        }
+    }
+
+    // ── DB migration ─────────────────────────────────────────────────────────
+
+    /**
+     * v1.0.0 shipped with <application>ojs2</application> in version.xml,
+     * causing OJS to record product='ojs2' in the versions table instead of
+     * the correct 'magicLogin'.  Rename the row so version tracking and the
+     * plugin list work correctly on existing installations.
+     */
+    private function migrateVersionRecord(): void
+    {
+        try {
+            $alreadyCorrect = DB::table('versions')
+                ->where('product_type', 'plugins.generic')
+                ->where('product', 'magicLogin')
+                ->exists();
+
+            if (!$alreadyCorrect) {
+                DB::table('versions')
+                    ->where('product_type', 'plugins.generic')
+                    ->where('product', 'ojs2')
+                    ->update(['product' => 'magicLogin']);
+            }
+        } catch (\Throwable $e) {
+            error_log('[magicLogin] migrateVersionRecord failed: ' . $e->getMessage());
         }
     }
 
