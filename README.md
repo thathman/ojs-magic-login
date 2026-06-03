@@ -2,7 +2,7 @@
 
 <table>
 <tr>
-<td><strong>Version</strong></td><td>1.1.0</td>
+<td><strong>Version</strong></td><td>1.2.1</td>
 <td><strong>OJS</strong></td><td>3.5.0+</td>
 <td><strong>PHP</strong></td><td>8.1+</td>
 <td><strong>License</strong></td><td>GPL-3.0-or-later</td>
@@ -108,7 +108,7 @@ Passwordless sign-in for Open Journal Systems 3.5. Users receive a one-time link
 > INSERT INTO versions
 >   (major, minor, revision, build, date_installed, current,
 >    product_type, product, product_class_name, lazy_load, sitewide)
-> VALUES (1,1,0,0,NOW(),1,
+> VALUES (1,2,1,0,NOW(),1,
 >   'plugins.generic','magicLogin','MagicLoginPlugin',1,0);
 > ```
 >
@@ -204,6 +204,7 @@ Available Smarty variables: `$sendUrl`, `$loginUrl`, `$token`, `$neutralMessage`
 | Version | Status | Description |
 |---------|--------|-------------|
 | 1.1.0 | Released | One-time email links with rate limiting and CSRF protection |
+| 1.2.1 | Released | Automatic, theme-agnostic injection of the sign-in-link button into the login form (no theme edits required); plugin pages ship as a plain single-column default |
 | 2.0.0 | Planned | Passkey / WebAuthn sign-in as a second passwordless method |
 
 The session-establishment layer (`classes/SessionService.php`) is already factored to accept a second caller so the passkey implementation does not require structural changes to this release.

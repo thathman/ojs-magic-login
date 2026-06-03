@@ -154,10 +154,52 @@ class MagicLoginPlugin extends GenericPlugin
         if (!$context) {
             return Hook::CONTINUE;
         }
-        $args[0]->assign('magicLoginRequestUrl',
+        /** @var \APP\template\TemplateManager $templateMgr */
+        $templateMgr = $args[0];
+        // Backward-compatible: themes may render this variable themselves.
+        $templateMgr->assign('magicLoginRequestUrl',
             $request->getDispatcher()->url($request, Application::ROUTE_PAGE, null, 'magicLogin', 'request')
         );
+        // Theme-agnostic auto-injection: insert the button straight into the
+        // rendered login form via an output filter, so a fresh install needs
+        // NO theme template edits. The default OJS login template has no slot
+        // for plugin content, so we post-process the HTML.
+        $templateMgr->registerFilter('output', [$this, 'injectLoginButton']);
         return Hook::CONTINUE;
+    }
+
+    /**
+     * Smarty output filter: inject the magic-login button into the rendered
+     * sign-in form. Theme-agnostic; no template edits required.
+     */
+    public function injectLoginButton(string $output, $templateMgr): string
+    {
+        // Skip if a theme already rendered the link, or we already injected.
+        if (str_contains($output, 'magic-login-inject') || str_contains($output, 'magicLogin/request')) {
+            return $output;
+        }
+        $request = Application::get()->getRequest();
+        $context = $request->getContext();
+        if (!$context || !$this->getSetting($context->getId(), 'enabled')) {
+            return $output;
+        }
+        $url   = $request->getDispatcher()->url($request, Application::ROUTE_PAGE, null, 'magicLogin', 'request');
+        $label = htmlspecialchars((string) __('plugins.generic.magicLogin.login.button'), ENT_QUOTES);
+        $block = '<div class="magic-login-inject" style="margin:1rem 0 0;padding-top:1rem;border-top:1px solid rgba(0,0,0,.08);text-align:center;">'
+               . '<a href="' . htmlspecialchars($url, ENT_QUOTES) . '" class="magic-login-inject__link" style="display:inline-block;font-weight:600;text-decoration:underline;">'
+               . $label . '</a></div>';
+
+        // Preferred: insert just before the closing </form> of the sign-in form.
+        $pattern = '/(<form\b[^>]*action="[^"]*\/login\/signIn[^"]*"[^>]*>.*?)(<\/form>)/is';
+        if (preg_match($pattern, $output)) {
+            return preg_replace($pattern, '$1' . $block . '$2', $output, 1);
+        }
+        // Fallback: after the first closing form tag on the page.
+        $pos = stripos($output, '</form>');
+        if ($pos !== false) {
+            return substr($output, 0, $pos + 7) . $block . substr($output, $pos + 7);
+        }
+        return $output;
     }
 
     // ── Feature guards + config ──────────────────────────────────────────────

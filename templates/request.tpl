@@ -1,44 +1,7 @@
 {include file="frontend/components/header.tpl" pageTitle="plugins.generic.magicLogin.request.title"}
 <div class="magic-login-page">
 
-  {* ── Left panel ─────────────────────────────────────────── *}
-  <aside class="magic-login-side">
-    <div class="magic-login-status">
-      <span class="magic-login-dot"></span>
-      <span>{translate key="plugins.generic.magicLogin.shared.secureConnection"}</span>
-    </div>
-
-    <a class="magic-login-logo" href="{url page='index'}">
-      {if $currentContext && $currentContext->getLocalizedData('coverImage')}
-        <img src="{$currentContext->getLocalizedData('coverImage')|escape}" alt="{$currentContext->getLocalizedName()|strip_tags|escape}" style="width:40px;height:40px;object-fit:contain;border-radius:2px;flex-shrink:0;">
-      {else}
-        <div class="magic-login-mark">{$currentContext->getLocalizedAcronym()|strip_tags|truncate:3:""|default:"ML"|escape}</div>
-      {/if}
-      <div class="magic-login-logo-text">
-        <div class="magic-login-logo-title">{$currentContext->getLocalizedName()|strip_tags|truncate:36:""|escape}</div>
-        <div class="magic-login-logo-subtitle">{translate key="plugins.generic.magicLogin.shared.memberAccess"}</div>
-      </div>
-    </a>
-
-    <div class="magic-login-cover">
-      <div class="magic-login-cover-title">{translate key="plugins.generic.magicLogin.request.hero"}</div>
-      <div class="magic-login-cover-caption">
-        <span>{$currentContext->getLocalizedName()|strip_tags|escape}</span>
-        <span>{translate key="plugins.generic.magicLogin.shared.memberAccess"}</span>
-      </div>
-    </div>
-
-    {if $currentContext->getLocalizedData('description')}
-      <p class="magic-login-desc">{$currentContext->getLocalizedData('description')|strip_tags|truncate:160:"…"}</p>
-    {/if}
-
-    <div class="magic-login-meta">
-      {if $currentContext->getData('printIssn')}<div>ISSN {$currentContext->getData('printIssn')|escape}{if $currentContext->getData('onlineIssn')} &middot; eISSN {$currentContext->getData('onlineIssn')|escape}{/if}</div>{/if}
-      <div>{translate key="plugins.generic.magicLogin.shared.builtOn"}</div>
-    </div>
-  </aside>
-
-  {* ── Right panel ─────────────────────────────────────────── *}
+  {* ── Form column (single-column layout) ──────────────────── *}
   <main class="magic-login-main">
     <div class="magic-login-card">
 

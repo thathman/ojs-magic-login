@@ -64,6 +64,9 @@ msgstr "Email me a sign-in link"
 msgid "plugins.generic.magicLogin.request.back"
 msgstr "Back to sign in"
 
+msgid "plugins.generic.magicLogin.login.button"
+msgstr "Email me a sign-in link"
+
 msgid "plugins.generic.magicLogin.request.sent"
 msgstr "If that email matches an account, a sign-in link is on its way. Please check your inbox."
 

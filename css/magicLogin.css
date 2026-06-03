@@ -28,7 +28,7 @@
 
   box-sizing: border-box;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(400px, 1fr);
+  grid-template-columns: 1fr;
   min-height: 100vh;
   background: var(--ml-paper);
   color: var(--ml-ink);
