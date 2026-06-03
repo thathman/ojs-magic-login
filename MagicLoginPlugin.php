@@ -133,6 +133,7 @@ class MagicLoginPlugin extends GenericPlugin
                 DB::table('versions')
                     ->where('product_type', 'plugins.generic')
                     ->where('product', 'ojs2')
+                    ->where('product_class_name', 'MagicLoginPlugin')
                     ->update(['product' => 'magicLogin']);
             }
         } catch (\Throwable $e) {
